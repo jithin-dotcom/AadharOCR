@@ -225,15 +225,15 @@ export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
   const data: Partial<OcrResult> = {};
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-  // Extract Aadhaar Number
+ 
   const aadhaarMatch = text.match(aadhaarRegex);
   data.aadhaarNumber = aadhaarMatch?.[0].replace(/\s+/g, '') || 'Not found';
 
-  // Extract Date of Birth
+
   const dobMatch = text.match(dobRegex);
   data.dob = dobMatch?.[1] || 'Not found';
 
-  // Extract Name
+ 
   let name = '';
   for (let i = 0; i < lines.length - 1; i++) {
     const cur = lines[i];
@@ -246,7 +246,7 @@ export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
     }
   }
 
-  // Fallback: Look for a standalone line that matches typical name pattern
+ 
   if (!name) {
     name = lines.find(
       l =>
@@ -263,7 +263,7 @@ export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
   const data: Partial<OcrResult> = {};
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-  // Try to find address starting from the line after "Address" or "पता"
+ 
   const addressLines: string[] = [];
   const addrIdx = lines.findIndex(l => /^address[:：]?\s*$/i.test(l));
   let idx = addrIdx >= 0 ? addrIdx + 1 : 0;
@@ -274,18 +274,18 @@ export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
     }
   }
 
-  // Fallback: Pick address-like lines from the bottom 40% of the document
+ 
   if (addressLines.length < 2) {
     const tail = lines.slice(Math.floor(lines.length * 0.6));
     addressLines.push(...tail.filter(l => !isNoise(l) && l.length > 4));
   }
 
-  // Join address lines with comma separator
+ 
   if (addressLines.length) {
     data.address = addressLines.join(', ');
   }
 
-  // Extract 6-digit PIN code from address or overall text
+ 
   const pin = (data.address ?? text).match(/\b\d{6}\b/);
   if (pin?.[0]) {
     data.address = (data.address || '') + (data.address ? ', ' : '') + pin[0];
