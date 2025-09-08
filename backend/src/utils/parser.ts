@@ -208,7 +208,7 @@ import { OcrResult } from '../types';
 const aadhaarRegex = /\b\d{4}\s?\d{4}\s?\d{4}\b/;
 const dobRegex = /\b(\d{2}[\/\-]\d{2}[\/\-]\d{4})\b/;
 
-// Define noise patterns to ignore
+
 const NOISE: RegExp[] = [
   /government of india/i, /uidai/i, /gov\.in/i, /www/i, /help/i,
   /आधार|भारत सरकार|भारतीय विशिष्ट पहचान प्राधिकरण/i,
@@ -221,43 +221,86 @@ const NOISE: RegExp[] = [
 ];
 const isNoise = (s: string) => NOISE.some(r => r.test(s));
 
+// export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
+//   const data: Partial<OcrResult> = {};
+//   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+ 
+//   const aadhaarMatch = text.match(aadhaarRegex);
+//   data.aadhaarNumber = aadhaarMatch?.[0].replace(/\s+/g, '') || 'Not found';
+
+
+//   const dobMatch = text.match(dobRegex);
+//   data.dob = dobMatch?.[1] || 'Not found';
+
+ 
+//   let name = '';
+//   for (let i = 0; i < lines.length - 1; i++) {
+//     const cur = lines[i];
+//     const nxt = lines[i + 1];
+//     const isNonLatin = /[^\x00-\x7F]/.test(cur); // Check for non-English characters
+//     const latinName = /^[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?$/;
+//     if (isNonLatin && latinName.test(nxt) && !isNoise(nxt)) {
+//       name = nxt;
+//       break;
+//     }
+//   }
+
+ 
+//   if (!name) {
+//     name = lines.find(
+//       l =>
+//         /^[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+/.test(l) &&
+//         !isNoise(l)
+//     ) || '';
+//   }
+//   data.name = name || 'Not found';
+
+//   return data;
+// };
+
+
+
+
+
 export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
   const data: Partial<OcrResult> = {};
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
- 
+  // Aadhaar number
   const aadhaarMatch = text.match(aadhaarRegex);
   data.aadhaarNumber = aadhaarMatch?.[0].replace(/\s+/g, '') || 'Not found';
 
-
+  // DOB
   const dobMatch = text.match(dobRegex);
   data.dob = dobMatch?.[1] || 'Not found';
 
- 
+  // --- Name Extraction ---
   let name = '';
-  for (let i = 0; i < lines.length - 1; i++) {
-    const cur = lines[i];
-    const nxt = lines[i + 1];
-    const isNonLatin = /[^\x00-\x7F]/.test(cur); // Check for non-English characters
-    const latinName = /^[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?$/;
-    if (isNonLatin && latinName.test(nxt) && !isNoise(nxt)) {
-      name = nxt;
-      break;
+  if (data.dob !== 'Not found') {
+    const dobLineIndex = lines.findIndex(l => l.includes(data.dob!));
+    if (dobLineIndex > 0) {
+      // Take the line just above DOB as name candidate
+      const candidate = lines[dobLineIndex - 1];
+      if (!isNoise(candidate)) {
+        name = candidate.replace(/[^a-zA-Z\s]/g, '').trim(); // remove stray symbols
+      }
     }
   }
 
- 
+  // fallback if still not found
   if (!name) {
     name = lines.find(
-      l =>
-        /^[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+/.test(l) &&
-        !isNoise(l)
+      l => /^[A-Za-z]{2,}\s+[A-Za-z]{2,}/.test(l) && !isNoise(l)
     ) || '';
   }
-  data.name = name || 'Not found';
 
+  data.name = name || 'Not found';
   return data;
 };
+
+
+
 
 export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
   const data: Partial<OcrResult> = {};
