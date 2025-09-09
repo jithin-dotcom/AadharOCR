@@ -110,6 +110,36 @@
 
 
 
+// import { Request, Response, NextFunction } from 'express';
+// import { IOcrService } from '../services/IOcrService';
+
+// export class OcrController {
+//   constructor(private ocrService: IOcrService) {}
+
+//   processOcr = async (req: Request, res: Response, next: NextFunction) => {
+//     try {
+//       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
+//       const frontFile = files['front'][0];
+//       const backFile = files['back'][0];
+//       const frontPath = frontFile.path;
+//       const backPath = backFile.path;
+
+//       const savedResult = await this.ocrService.processAndSaveOcr(frontPath, backPath);
+//       res.json(savedResult);
+//     } catch (err) {
+//       next(err);
+//     }
+//   };
+// }
+
+
+
+
+
+
+
+
+
 import { Request, Response, NextFunction } from 'express';
 import { IOcrService } from '../services/IOcrService';
 
@@ -119,12 +149,16 @@ export class OcrController {
   processOcr = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
-      const frontFile = files['front'][0];
-      const backFile = files['back'][0];
-      const frontPath = frontFile.path;
-      const backPath = backFile.path;
+      const frontFile = files['front']?.[0];
+      const backFile = files['back']?.[0];
 
-      const savedResult = await this.ocrService.processAndSaveOcr(frontPath, backPath);
+      if (!frontFile || !backFile) {
+        return res.status(400).json({ error: 'Both front and back images are required' });
+      }
+
+      // Pass the file objects (with buffer) to service
+      const savedResult = await this.ocrService.processAndSaveOcr(frontFile, backFile);
+
       res.json(savedResult);
     } catch (err) {
       next(err);

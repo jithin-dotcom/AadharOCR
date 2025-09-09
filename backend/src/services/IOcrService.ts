@@ -23,5 +23,6 @@
 import { OcrResult } from '../types';
 
 export interface IOcrService {
-  processAndSaveOcr(frontPath: string, backPath: string): Promise<OcrResult>;
+  // processAndSaveOcr(frontPath: string, backPath: string): Promise<OcrResult>;
+   processAndSaveOcr(frontPath: Express.Multer.File, backPath: Express.Multer.File): Promise<OcrResult>;
 }
