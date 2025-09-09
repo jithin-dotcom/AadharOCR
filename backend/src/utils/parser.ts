@@ -217,48 +217,13 @@ const NOISE: RegExp[] = [
   /^address[:：]?\s*$/i, /^पता[:：]?\s*$/i,
   /\d{4}\s?\d{4}\s?\d{4}/,
   /\d{2}[\/\-]\d{2}[\/\-]\d{4}/,
-  /male|female|other|dob|जन्म|1947|1800|customer|toll\s*free/i
+  /male|female|other|dob|जन्म|1947|1800|customer|toll\s*free/i,
+  /\bset\b/i,        
+  /\bfem\b/i,       
+  /\bwe\b/i,         
+  /\bnear\b/i 
 ];
 const isNoise = (s: string) => NOISE.some(r => r.test(s));
-
-// export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
-//   const data: Partial<OcrResult> = {};
-//   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-
- 
-//   const aadhaarMatch = text.match(aadhaarRegex);
-//   data.aadhaarNumber = aadhaarMatch?.[0].replace(/\s+/g, '') || 'Not found';
-
-
-//   const dobMatch = text.match(dobRegex);
-//   data.dob = dobMatch?.[1] || 'Not found';
-
- 
-//   let name = '';
-//   for (let i = 0; i < lines.length - 1; i++) {
-//     const cur = lines[i];
-//     const nxt = lines[i + 1];
-//     const isNonLatin = /[^\x00-\x7F]/.test(cur); // Check for non-English characters
-//     const latinName = /^[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+(?:\s+[A-Z][a-zA-Z]+)?$/;
-//     if (isNonLatin && latinName.test(nxt) && !isNoise(nxt)) {
-//       name = nxt;
-//       break;
-//     }
-//   }
-
- 
-//   if (!name) {
-//     name = lines.find(
-//       l =>
-//         /^[A-Z][a-zA-Z]+\s+[A-Z][a-zA-Z]+/.test(l) &&
-//         !isNoise(l)
-//     ) || '';
-//   }
-//   data.name = name || 'Not found';
-
-//   return data;
-// };
-
 
 
 
@@ -267,20 +232,20 @@ export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
   const data: Partial<OcrResult> = {};
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-  // Aadhaar number
+ 
   const aadhaarMatch = text.match(aadhaarRegex);
   data.aadhaarNumber = aadhaarMatch?.[0].replace(/\s+/g, '') || 'Not found';
 
-  // DOB
+
   const dobMatch = text.match(dobRegex);
   data.dob = dobMatch?.[1] || 'Not found';
 
-  // --- Name Extraction ---
+ 
   let name = '';
   if (data.dob !== 'Not found') {
     const dobLineIndex = lines.findIndex(l => l.includes(data.dob!));
     if (dobLineIndex > 0) {
-      // Take the line just above DOB as name candidate
+     
       const candidate = lines[dobLineIndex - 1];
       if (!isNoise(candidate)) {
         name = candidate.replace(/[^a-zA-Z\s]/g, '').trim(); // remove stray symbols
@@ -302,37 +267,153 @@ export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
 
 
 
+
+
+
+
 export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
   const data: Partial<OcrResult> = {};
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
- 
   const addressLines: string[] = [];
-  const addrIdx = lines.findIndex(l => /^address[:：]?\s*$/i.test(l));
+  const addrIdx = lines.findIndex(l => /address[:：]?\s*$/i.test(l));
   let idx = addrIdx >= 0 ? addrIdx + 1 : 0;
+
   while (idx < lines.length && addressLines.length < 7) {
     const l = lines[idx++];
-    if (!isNoise(l) && l.length > 4) {
-      addressLines.push(l.replace(/[,;]\s*$/, '')); // Clean ending punctuation
+    // Keep only "address-like" lines
+    const isAddressLike = /[a-zA-Z]/.test(l) && (/\d/.test(l) || /,/.test(l) || l.length > 10);
+    if (!isNoise(l) && isAddressLike) {
+      // remove unwanted symbols
+      const cleaned = l.replace(/[^a-zA-Z0-9,\-\s]/g, '').trim();
+      if (cleaned.length > 4) addressLines.push(cleaned);
     }
   }
 
- 
+  // fallback: take lower half of text if nothing found
   if (addressLines.length < 2) {
     const tail = lines.slice(Math.floor(lines.length * 0.6));
-    addressLines.push(...tail.filter(l => !isNoise(l) && l.length > 4));
+    tail.forEach(l => {
+      const cleaned = l.replace(/[^a-zA-Z0-9,\-\s]/g, '').trim();
+      if (cleaned.length > 4 && !isNoise(cleaned)) addressLines.push(cleaned);
+    });
   }
 
- 
   if (addressLines.length) {
     data.address = addressLines.join(', ');
   }
 
- 
-  const pin = (data.address ?? text).match(/\b\d{6}\b/);
-  if (pin?.[0]) {
-    data.address = (data.address || '') + (data.address ? ', ' : '') + pin[0];
+  // Extract pincode (6-digit number)
+  // const pin = (data.address ?? text).match(/\b\d{6}\b/);
+  // if (pin?.[0]) {
+  //   data.address = (data.address || '') + (data.address ? ', ' : '') + pin[0];
+  // }
+  // if(data.address){
+  //    data.address = cleanAadhaarAddress(data.address);
+  // }
+
+  const pins = Array.from((data.address ?? text).matchAll(/\b\d{6}\b/g)).map(m => m[0]);
+
+if (pins.length) {
+  // Remove duplicates, keep last one
+  const uniquePins = [...new Set(pins)];
+  const finalPin = uniquePins[uniquePins.length - 1];
+
+  // Only append if not already present
+  if (data.address && !data.address.includes(finalPin)) {
+    data.address = data.address + ', ' + finalPin;
+  } else {
+    data.address = data.address || finalPin;
   }
+}
+
+// Final cleanup
+if (data.address) {
+  data.address = cleanAadhaarAddress(data.address);
+}
 
   return data;
 };
+
+
+
+
+
+function cleanAadhaarAddress(rawText: string): string {
+  if (!rawText) return "";
+
+  // Step 1: Normalize whitespace & commas
+  let cleaned = rawText
+    .replace(/\s+/g, " ")         
+    .replace(/,+/g, ",")          
+    .replace(/\s*,\s*/g, ", ")    
+    .trim();
+
+  // Step 2: Remove obvious junk words
+  const junkWords = [
+    "fra", "Foret", "fame", "fez", "we",
+    "AEFI", "SET", "Fem"
+  ];
+  cleaned = cleaned
+    .split(" ")
+    .filter(word => !junkWords.includes(word))
+    .join(" ");
+
+  // Step 3: Fix common OCR mistakes
+  const replacements: Record<string, string> = {
+    "Hy": "H",
+    "Fem": "",
+    "Salimpur": "Salimpur",
+    "Phulwari": "Phulwari Sharif"
+  };
+
+  Object.entries(replacements).forEach(([wrong, right]) => {
+    const regex = new RegExp(`\\b${wrong}\\b`, "gi");
+    cleaned = cleaned.replace(regex, right);
+  });
+
+  // Step 4: Final tidy
+  return cleaned.replace(/\s+/g, " ").trim();
+}
+
+
+
+
+
+
+
+
+// export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
+//   const data: Partial<OcrResult> = {};
+//   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+ 
+//   const addressLines: string[] = [];
+//   const addrIdx = lines.findIndex(l => /^address[:：]?\s*$/i.test(l));
+//   let idx = addrIdx >= 0 ? addrIdx + 1 : 0;
+//   while (idx < lines.length && addressLines.length < 7) {
+//     const l = lines[idx++];
+//     if (!isNoise(l) && l.length > 4) {
+//       addressLines.push(l.replace(/[,;]\s*$/, '')); // Clean ending punctuation
+//     }
+//   }
+
+ 
+//   if (addressLines.length < 2) {
+//     const tail = lines.slice(Math.floor(lines.length * 0.6));
+//     addressLines.push(...tail.filter(l => !isNoise(l) && l.length > 4));
+//   }
+
+ 
+//   if (addressLines.length) {
+//     data.address = addressLines.join(', ');
+//   }
+
+ 
+//   const pin = (data.address ?? text).match(/\b\d{6}\b/);
+//   if (pin?.[0]) {
+//     data.address = (data.address || '') + (data.address ? ', ' : '') + pin[0];
+//   }
+
+//   return data;
+// };

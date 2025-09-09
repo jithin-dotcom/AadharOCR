@@ -243,11 +243,12 @@ export class OcrService implements IOcrService {
       const frontUpload = await cloudinary.uploader.upload(frontPath, { folder: 'aadhaar/front' });
       const backUpload = await cloudinary.uploader.upload(backPath, { folder: 'aadhaar/back' });
 
-      // Use only English language for OCR
+     
       const frontResult = await Tesseract.recognize(frontPath, 'eng');
       const backResult = await Tesseract.recognize(backPath, 'eng');
       
-      console.log('Raw front text:', frontResult.data.text); // Debug log to verify output
+      console.log('Raw front text:', frontResult.data.text);
+      console.log('Raw back text:', backResult.data.text);
       const frontData = parseAadhaarFront(frontResult.data.text);
       const backData = parseAadhaarBack(backResult.data.text);
       
