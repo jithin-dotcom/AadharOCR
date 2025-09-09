@@ -37,11 +37,11 @@ OCR is handled using tesseract.js, with custom parsing logic to extract clean an
 - ⚠️ Handles noise & OCR errors gracefully
 
 ---
-<!-- 
+
 ## 🌐 Live Demo
 
-> Coming Soon! ✨  
-> [Optional: Link to deployed frontend (e.g., Vercel, Netlify) or backend (e.g., Render, GCP App Engine)] -->
+- Coming Soon! ✨  
+- Link *https://aadhar-ocr-rust.vercel.app*
 
 ---
 
@@ -95,8 +95,6 @@ npm run dev
 
 ## 📤 Upload Flow
  - User uploads front and/or back of Aadhaar card.
-
- - Backend sends image to Google Cloud Vision.
 
  - Extracted text is parsed using a custom regex engine.
 

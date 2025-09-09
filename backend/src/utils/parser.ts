@@ -80,10 +80,8 @@ export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
 
   while (idx < lines.length && addressLines.length < 7) {
     const l = lines[idx++];
-    // Keep only "address-like" lines
     const isAddressLike = /[a-zA-Z]/.test(l) && (/\d/.test(l) || /,/.test(l) || l.length > 10);
     if (!isNoise(l) && isAddressLike) {
-      // remove unwanted symbols
       const cleaned = l.replace(/[^a-zA-Z0-9,\-\s]/g, '').trim();
       if (cleaned.length > 4) addressLines.push(cleaned);
     }
@@ -104,25 +102,25 @@ export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
 
   
 
-  const pins = Array.from((data.address ?? text).matchAll(/\b\d{6}\b/g)).map(m => m[0]);
+const pins = Array.from((data.address ?? text).matchAll(/\b\d{6}\b/g)).map(m => m[0]);
 
-if (pins.length) {
+ if (pins.length) {
  
-  const uniquePins = [...new Set(pins)];
-  const finalPin = uniquePins[uniquePins.length - 1];
+   const uniquePins = [...new Set(pins)];
+   const finalPin = uniquePins[uniquePins.length - 1];
 
  
-  if (data.address && !data.address.includes(finalPin)) {
-    data.address = data.address + ', ' + finalPin;
-  } else {
-    data.address = data.address || finalPin;
+   if (data.address && !data.address.includes(finalPin)) {
+     data.address = data.address + ', ' + finalPin;
+   }else {
+     data.address = data.address || finalPin;
+   }
   }
-}
 
 
-if (data.address) {
-  data.address = cleanAadhaarAddress(data.address);
-}
+ if (data.address) {
+   data.address = cleanAadhaarAddress(data.address);
+ }
 
   return data;
 };

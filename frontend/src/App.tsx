@@ -192,7 +192,7 @@ import type { IOcrData } from './interface/IOcrData';
 import axios from 'axios';
 import { X, FileImage, Loader2, Upload, AlertCircle, CheckCircle } from 'lucide-react';
 
-// Toast Component
+
 const Toast = ({ message, type, onClose }: { message: string; type: 'error' | 'success'; onClose: () => void }) => {
   return (
     <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-white font-medium transition-all duration-300 ${
@@ -229,7 +229,6 @@ function App() {
       return false;
     }
     
-    // Optional: Check file size (e.g., max 10MB)
     if (file.size > 10 * 1024 * 1024) {
       showToast('File size should be less than 10MB', 'error');
       return false;
@@ -313,7 +312,7 @@ function App() {
       )}
 
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
+       
         <div className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-4">
             Aadhaar OCR Scanner
@@ -326,7 +325,7 @@ function App() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             
-            {/* Upload Section */}
+          
             <div className="space-y-6">
               <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
                 <h2 className="text-2xl font-bold text-gray-800 mb-6 text-center">
@@ -363,7 +362,6 @@ function App() {
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div className="flex flex-col sm:flex-row gap-3 mt-8">
                   <button
                     onClick={handleParseAadhaar}
@@ -395,7 +393,6 @@ function App() {
               </div>
             </div>
 
-            {/* Results Section */}
             <div className="space-y-6">
               {loading && (
                 <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
@@ -429,7 +426,6 @@ function App() {
           </div>
         </div>
 
-        {/* Footer */}
         <div className="text-center mt-12 text-gray-500 text-sm">
           <p>Your data is processed securely and not stored on our servers</p>
         </div>
