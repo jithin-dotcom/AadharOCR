@@ -9,6 +9,7 @@ export class OcrController implements IOcrController{
 
   async processOcr(req: Request, res: Response, next: NextFunction): Promise<void>{
     try {
+      console.log("Files received:", req.files);
       const files = req.files as { [fieldname: string]: Express.Multer.File[] };
       const frontFile = files['front']?.[0];
       const backFile = files['back']?.[0];
