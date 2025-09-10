@@ -15,7 +15,7 @@ const ocrController = new OcrController(ocrService);
 router.post(
   '/ocr',
   upload.fields([{ name: 'front', maxCount: 1 }, { name: 'back', maxCount: 1 }]),
-  ocrController.processOcr
+  ocrController.processOcr.bind(ocrController)
 );
 
 export default router;

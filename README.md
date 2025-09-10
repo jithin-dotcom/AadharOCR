@@ -50,8 +50,8 @@ OCR is handled using tesseract.js, with custom parsing logic to extract clean an
 ### 🔽 Clone the Repo
 
 ```bash
-git clone https://github.com/your-username/aadhar-ocr-system.git
-cd aadhar-ocr-system
+git clone https://github.com/your-username/AadharOCR.git
+cd AadharOCR
 
 ```
 
@@ -76,7 +76,7 @@ npm install
 
 ```bash
 PORT=7000
-GOOGLE_APPLICATION_CREDENTIALS=./path-to-your-gcp-credentials.json
+
 
 ```
 

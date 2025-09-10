@@ -100,8 +100,6 @@ export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
     data.address = addressLines.join(', ');
   }
 
-  
-
 const pins = Array.from((data.address ?? text).matchAll(/\b\d{6}\b/g)).map(m => m[0]);
 
  if (pins.length) {
@@ -109,18 +107,15 @@ const pins = Array.from((data.address ?? text).matchAll(/\b\d{6}\b/g)).map(m => 
    const uniquePins = [...new Set(pins)];
    const finalPin = uniquePins[uniquePins.length - 1];
 
- 
    if (data.address && !data.address.includes(finalPin)) {
      data.address = data.address + ', ' + finalPin;
    }else {
      data.address = data.address || finalPin;
    }
   }
-
-
- if (data.address) {
+  if (data.address) {
    data.address = cleanAadhaarAddress(data.address);
- }
+  }
 
   return data;
 };
@@ -132,14 +127,12 @@ const pins = Array.from((data.address ?? text).matchAll(/\b\d{6}\b/g)).map(m => 
 function cleanAadhaarAddress(rawText: string): string {
   if (!rawText) return "";
 
- 
   let cleaned = rawText
     .replace(/\s+/g, " ")         
     .replace(/,+/g, ",")          
     .replace(/\s*,\s*/g, ", ")    
     .trim();
 
- 
   const junkWords = [
     "fra", "Foret", "fame", "fez", "we",
     "AEFI", "SET", "Fem"
