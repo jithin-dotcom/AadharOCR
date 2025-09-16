@@ -76,6 +76,12 @@ npm install
 
 ```bash
 PORT=7000
+MONGO_URI= "your mongoDB URI"
+CLOUDINARY_CLOUD_NAME= "your cloud name"
+CLOUDINARY_API_KEY= "your API key"
+CLOUDINARY_API_SECRET= "your API secret"
+FRONTEND_URI= "your frontend url"
+
 
 
 ```
