@@ -31,28 +31,25 @@ export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
   const data: Partial<OcrResult> = {};
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
- 
   const aadhaarMatch = text.match(aadhaarRegex);
   data.aadhaarNumber = aadhaarMatch?.[0].replace(/\s+/g, '') || 'Not found';
-
 
   const dobMatch = text.match(dobRegex);
   data.dob = dobMatch?.[1] || 'Not found';
 
- 
+  const genderMatch = text.match(/\b(male|female|other)\b/i);
+  data.gender = genderMatch ? genderMatch[0].toLowerCase() : 'Not found';
+
   let name = '';
   if (data.dob !== 'Not found') {
     const dobLineIndex = lines.findIndex(l => l.includes(data.dob!));
     if (dobLineIndex > 0) {
-     
       const candidate = lines[dobLineIndex - 1];
       if (!isNoise(candidate)) {
-        name = candidate.replace(/[^a-zA-Z\s]/g, '').trim(); // remove stray symbols
+        name = candidate.replace(/[^a-zA-Z\s]/g, '').trim();
       }
     }
   }
-
- 
   if (!name) {
     name = lines.find(
       l => /^[A-Za-z]{2,}\s+[A-Za-z]{2,}/.test(l) && !isNoise(l)
@@ -60,12 +57,9 @@ export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
   }
 
   data.name = name || 'Not found';
+
   return data;
 };
-
-
-
-
 
 
 
@@ -73,6 +67,9 @@ export const parseAadhaarFront = (text: string): Partial<OcrResult> => {
 export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
   const data: Partial<OcrResult> = {};
   const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  const aadhaarMatch = text.match(aadhaarRegex);
+  data.aadhaarNumber = aadhaarMatch?.[0].replace(/\s+/g, '') || 'Not found';
 
   const addressLines: string[] = [];
   const addrIdx = lines.findIndex(l => /address[:：]?\s*$/i.test(l));
@@ -87,7 +84,6 @@ export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
     }
   }
 
-  
   if (addressLines.length < 2) {
     const tail = lines.slice(Math.floor(lines.length * 0.6));
     tail.forEach(l => {
@@ -100,21 +96,24 @@ export const parseAadhaarBack = (text: string): Partial<OcrResult> => {
     data.address = addressLines.join(', ');
   }
 
-const pins = Array.from((data.address ?? text).matchAll(/\b\d{6}\b/g)).map(m => m[0]);
-
- if (pins.length) {
  
-   const uniquePins = [...new Set(pins)];
-   const finalPin = uniquePins[uniquePins.length - 1];
-
-   if (data.address && !data.address.includes(finalPin)) {
-     data.address = data.address + ', ' + finalPin;
-   }else {
-     data.address = data.address || finalPin;
-   }
+  const pinMatch = text.match(/-\s*(\d{6})/);
+  if (pinMatch) {
+    data.pincode = pinMatch[1];
+  } else {
+    const pins = Array.from((data.address ?? text).matchAll(/\b\d{6}\b/g)).map(m => m[0]);
+    if (pins.length) {
+      data.pincode = pins[pins.length - 1]; 
+    }
   }
+
+ 
+  if (data.pincode && data.address && !data.address.includes(data.pincode)) {
+    data.address = `${data.address}, ${data.pincode}`;
+  }
+
   if (data.address) {
-   data.address = cleanAadhaarAddress(data.address);
+    data.address = cleanAadhaarAddress(data.address);
   }
 
   return data;

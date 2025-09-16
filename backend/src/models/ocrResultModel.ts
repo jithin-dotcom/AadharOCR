@@ -7,6 +7,8 @@ const ocrResultSchema: Schema = new Schema<OcrResult>({
   aadhaarNumber: String,
   name: String,
   dob: String,
+  gender: String,
+  pincode: String,
   address: String,
   frontImagePath: String,
   backImagePath: String,

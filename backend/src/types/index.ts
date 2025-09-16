@@ -11,3 +11,18 @@ export interface OcrResult {
   backImagePath?: string;
   createdAt?: Date;
 }
+
+
+
+
+
+
+export interface OcrResultDTO {
+  aadhaarNumber?: string;
+  name?: string;
+  dob?: string;
+  address?: string;
+  gender?: string;
+  pincode?: string;
+
+}
