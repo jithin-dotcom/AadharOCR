@@ -8,6 +8,7 @@ import axios from 'axios';
 import { X, FileImage, Loader2, Upload, AlertCircle, CheckCircle } from 'lucide-react';
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { AxiosError } from 'axios';
 
 
 const Toast = ({ message, type, onClose }: { message: string; type: 'error' | 'success'; onClose: () => void }) => {
@@ -105,8 +106,11 @@ function App() {
       setOcrData(response.data);
       showToast('Aadhaar parsed successfully!', 'success');
     } catch (err) {
-      console.log(err);
-      showToast('Failed to parse Aadhaar. Please try again.', 'error');
+      let msg = 'Failed to parse Aadhaar. Please try again.';
+      if(err instanceof AxiosError){
+         msg = err.response?.data?.error || msg ;
+      }
+      showToast(msg, 'error');
     } finally {
       setLoading(false);
     }

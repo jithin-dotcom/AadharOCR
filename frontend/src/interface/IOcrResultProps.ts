@@ -6,6 +6,7 @@ export interface IOcrResultProps {
     name?: string;
     dob?: string;
     address?: string;
-    
+    gender?: string;
+    pincode?: string;
   };
 }

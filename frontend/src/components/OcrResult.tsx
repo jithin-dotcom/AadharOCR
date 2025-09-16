@@ -12,7 +12,10 @@ const OcrResult: React.FC<IOcrResultProps> = ({ data }) => {
     { label: 'Aadhaar Number', value: data.aadhaarNumber, key: 'aadhaarNumber' },
     { label: 'Name', value: data.name, key: 'name' },
     { label: 'Date of Birth', value: data.dob, key: 'dob' },
-    { label: 'Address', value: data.address, key: 'address' }
+    { label: 'Gender', value: data.gender, key: 'gender' },
+    { label: 'Pincode', value: data.pincode, key: 'pincode' },
+    { label: 'Address', value: data.address, key: 'address' },
+    
   ];
 
   return (
