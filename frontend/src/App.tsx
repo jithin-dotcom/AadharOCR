@@ -6,6 +6,8 @@ import OcrResult from './components/OcrResult';
 import type { IOcrData } from './interface/IOcrData';
 import axios from 'axios';
 import { X, FileImage, Loader2, Upload, AlertCircle, CheckCircle } from 'lucide-react';
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 
 const Toast = ({ message, type, onClose }: { message: string; type: 'error' | 'success'; onClose: () => void }) => {
@@ -245,6 +247,7 @@ function App() {
           <p>Your data is processed securely and not stored on our servers</p>
         </div>
       </div>
+       <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 }

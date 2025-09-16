@@ -1,8 +1,9 @@
 
 
-import { useCallback } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { Upload, FileImage, CheckCircle, Trash2 } from 'lucide-react';
+import { toast } from 'react-toastify';
 
 interface DropzoneProps {
   label: string;
@@ -16,47 +17,85 @@ interface DropzoneProps {
 const Dropzone: React.FC<DropzoneProps> = ({ 
   label, 
   onDrop, 
-  acceptedFiles, 
   preview, 
   onRemove, 
   isDragActive 
 }) => {
+  const [localPreview, setLocalPreview] = useState<string | null>(preview || null);
+
   const onDropHandler = useCallback((acceptedFiles: File[]) => {
-    onDrop(acceptedFiles);
+    if (acceptedFiles.length > 0) {
+      const file = acceptedFiles[0];
+
+      if (!["image/jpeg", "image/png", "image/webp"].includes(file.type)) {
+        toast.error("Invalid file type! Only JPG, JPEG, PNG, and WebP are allowed.");
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setLocalPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+
+      onDrop(acceptedFiles);
+    }
   }, [onDrop]);
+
+  const onDropRejectedHandler = () => {
+    toast.error("Invalid file type! Only JPG, JPEG, PNG, and WebP are allowed.");
+  };
 
   const { getRootProps, getInputProps, isDragActive: dropzoneIsDragActive } = useDropzone({
     onDrop: onDropHandler,
-    accept: { 'image/*': acceptedFiles.split(',') },
+    onDropRejected: onDropRejectedHandler,
+    accept: {
+      "image/jpeg": [".jpg", ".jpeg"],
+      "image/png": [".png"],
+      "image/webp": [".webp"]
+    },
     maxFiles: 1,
   });
 
   const isActive = isDragActive || dropzoneIsDragActive;
 
  
+  useEffect(() => {
+    return () => {
+      if (localPreview) URL.revokeObjectURL(localPreview);
+    };
+  }, [localPreview]);
 
   return (
     <div className="relative">
       <label className="block text-sm font-semibold text-gray-700 mb-2">{label}</label>
       
-      {preview ? (
+      {localPreview ? (
         <div className="relative group">
           <img 
-            src={preview} 
+            src={localPreview} 
             alt={label} 
-            className="w-full h-48 object-cover rounded-xl border-2 border-gray-200 shadow-sm" 
+            className="w-full max-h-84 object-cover rounded-xl border-2 border-gray-200 shadow-sm" 
           />
-          <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-xl flex items-center justify-center">
-            <button
-              onClick={onRemove}
-              className="bg-red-500 hover:bg-red-600 text-white p-2 rounded-full shadow-lg transform scale-0 group-hover:scale-100 transition-transform duration-200"
-              type="button"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-          <div className="absolute top-2 right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-medium shadow-md">
-            <CheckCircle size={12} className="inline mr-1" />
+
+        
+          <button
+            onClick={() => {
+              setLocalPreview(null);
+              onRemove();
+            }}
+            type="button"
+            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white 
+                       p-2 rounded-full shadow-lg transform scale-0 group-hover:scale-100 
+                       opacity-0 group-hover:opacity-100 transition-all duration-200"
+          >
+            <Trash2 size={16} />
+          </button>
+
+         
+          <div className="absolute bottom-2 left-2 bg-green-500 text-white px-2 py-1 
+                          rounded-full text-xs font-medium shadow-md flex items-center">
+            <CheckCircle size={12} className="mr-1" />
             Uploaded
           </div>
         </div>
@@ -69,10 +108,7 @@ const Dropzone: React.FC<DropzoneProps> = ({
               : 'border-gray-300 hover:border-blue-400 hover:bg-gray-50'
           }`}
         >
-          <input
-            {...getInputProps()}
-            accept=".jpg,.jpeg,.png,.webp"
-          />
+          <input {...getInputProps()} />
           
           <div className="flex flex-col items-center space-y-3">
             <div className={`p-3 rounded-full ${isActive ? 'bg-blue-100' : 'bg-gray-100'}`}>
